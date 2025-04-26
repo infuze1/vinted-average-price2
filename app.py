@@ -12,10 +12,14 @@ def fetch_vinted_listings(search_query, page=1, per_page=50):
         "page": page,
         "per_page": per_page,
     }
-    response = requests.get(url, params=params)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+    response = requests.get(url, params=params, headers=headers)
     if response.status_code == 200:
         return response.json()
     else:
+        print(f"Vinted API Error: {response.status_code} - {response.text}")
         return None
 
 # Function to extract prices from listings with optional condition filtering
@@ -45,9 +49,9 @@ def remove_outliers(prices):
 @app.route('/average-price', methods=['GET'])
 def average_price():
     search_query = request.args.get('query')
-    condition_filter = request.args.getlist('condition')
-    page_limit = int(request.args.get('pages', 2))
-    per_page = int(request.args.get('per_page', 50))
+    condition_filter = request.args.getlist('condition')  # can pass multiple conditions
+    page_limit = int(request.args.get('pages', 2))  # default to 2 pages
+    per_page = int(request.args.get('per_page', 50))  # default to 50 items per page
     remove_outliers_flag = request.args.get('remove_outliers', 'false').lower() == 'true'
 
     if not search_query:
@@ -57,8 +61,9 @@ def average_price():
 
     for page in range(1, page_limit + 1):
         data = fetch_vinted_listings(search_query, page, per_page)
-        prices = extract_prices(data, condition_filter)
-        all_prices.extend(prices)
+        if data:
+            prices = extract_prices(data, condition_filter)
+            all_prices.extend(prices)
 
     if not all_prices:
         return jsonify({"error": "No prices found for query."}), 404
