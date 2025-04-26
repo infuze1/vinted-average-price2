@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import requests
 import statistics
 
@@ -45,9 +45,9 @@ def remove_outliers(prices):
 @app.route('/average-price', methods=['GET'])
 def average_price():
     search_query = request.args.get('query')
-    condition_filter = request.args.getlist('condition')  # can pass multiple conditions
-    page_limit = int(request.args.get('pages', 2))  # default to 2 pages
-    per_page = int(request.args.get('per_page', 50))  # default to 50 items per page
+    condition_filter = request.args.getlist('condition')
+    page_limit = int(request.args.get('pages', 2))
+    per_page = int(request.args.get('per_page', 50))
     remove_outliers_flag = request.args.get('remove_outliers', 'false').lower() == 'true'
 
     if not search_query:
@@ -77,6 +77,11 @@ def average_price():
         "condition_filter": condition_filter,
         "outliers_removed": remove_outliers_flag
     })
+
+# Serve Frontend
+@app.route('/')
+def serve_frontend():
+    return send_from_directory('static', 'index.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

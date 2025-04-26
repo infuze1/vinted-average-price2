@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vinted Average Price Finder</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        input, button { padding: 10px; font-size: 1em; }
+        #result { margin-top: 2em; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>🔍 Vinted Average Price Finder</h1>
+
+<input type="text" id="searchQuery" placeholder="Enter product name..." size="40">
+<button onclick="searchPrice()">Search</button>
+
+<div id="result"></div>
+
+<script>
+async function searchPrice() {
+    const query = document.getElementById('searchQuery').value;
+    if (!query) {
+        alert('Please enter a product name.');
+        return;
+    }
+
+    document.getElementById('result').innerText = 'Loading...';
+
+    try {
+        const response = await fetch(`/average-price?query=${encodeURIComponent(query)}&remove_outliers=true&pages=5&per_page=100`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('result').innerHTML = `
+                <strong>Product:</strong> ${data.query}<br>
+                <strong>Average Price:</strong> €${data.average_price}<br>
+                <strong>Listings Found:</strong> ${data.listings_found}
+            `;
+        } else {
+            document.getElementById('result').innerText = data.error || 'Error fetching data.';
+        }
+    } catch (err) {
+        document.getElementById('result').innerText = 'Server error. Try again later.';
+    }
+}
+</script>
+
+</body>
+</html>
